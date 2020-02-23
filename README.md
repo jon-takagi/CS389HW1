@@ -20,4 +20,5 @@ To build this file, I used `g++ -O3 -o bin.out main.cpp`
 ### Part 2: graph
 ![Graph](https://github.com/jon-takagi/CS389HW1/blob/master/graph.png)
 
+This graph shows 
 ### Part 3: Analysis
