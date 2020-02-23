@@ -2,10 +2,10 @@
 
 ### Part 1: Coding
 #### `timer.sh`
-This script calls my C++ code (`main.cpp`) 17 times, with the argument ranging from 2^10 to 2^26 (increasing by powers of two each time) and a constant 10 iterations. The C++ code is responsible for printing output, so the script is very simple.
+This script calls my C++ code (`main.cpp`) 17 times, with the argument ranging from 2^12 to 2^26 (increasing by powers of two each time) and a constant 10 iterations. The C++ code is responsible for printing output, so the script is very simple.
 
 #### `main.cpp`
-This program reads two inputs from the command line: `buffer_length` and `iters`. It creates a new vector of `buffer_length` integers. Since an int is 4 bytes, calling this with an argument of 2^10 allocates 4*2^10 = 2^12 bytes of memory. Allocating fewer than 2^10 bytes of memory caused incoherent results, since the machine cannot accurately time reads of less than 1ns.
+This program reads two inputs from the command line: `buffer_size` and `iters`. It creates a new vector of `buffer_length` integers. Since an int is 4 bytes, I allocate `buffer_size/sizeof(int)` total integers. Allocating fewer than 2^12 bytes of memory caused incoherent results, since the machine cannot accurately time reads of less than 1 nanosecond. 
 
 Each value is initialized as 0, but is then written over as it's position in the array - data[0] is 0, data[1] is 1, and so on. I use a standard library function to derange the values, so the values are now in a random order.
 
@@ -20,5 +20,18 @@ To build this file, I used `g++ -O3 -o bin.out main.cpp`
 ### Part 2: graph
 ![Graph](https://github.com/jon-takagi/CS389HW1/blob/master/graph.png)
 
-This graph shows 
+This graph was generated with the command `gnuplot graph.plot`, which uses the data in `results.dat` as input. My C++ code outputs the buffer size in KB (using integer division for legibility) and the fastest average time to read per byte in nanoseconds as a tab separated value. Piping the output (or copying it from the terminal) into a text file creates input that gnuplot can understand.
+
+Because each buffer size is a power of 2 larger, I used a logscale on the x axis so that each data point is evenly spaced. Using a large (1980x1080) image makes the graph more readable.
+
 ### Part 3: Analysis
+If the buffer size is below the size of the L1 cache, we expect the entire buffer to be prefetched into the cache (thanks to the g++ builtin prefetch), giving a hit rate of 100%. If the buffer is twice the size of the L1 cache, we expect the L1 hit rate to be 50%.
+
+Using the examples given during lecture, we would expect the average time for an L1 hit rate of 50% and L2 hit rate of 100% to be
+$(0.5)(1) + (1-0.5)(3)$ or 2ns.
+
+However, by querying the machine directly, we find that [`cat /sys/devices/system/cpu/cpu0/cache/index1/size`](https://stackoverflow.com/questions/20330509/different-cpu-cache-size-reported-by-sys-device-and-dmidecode) tells us that my VM has 32KB of L1 cache, 256KB of L2 cache and 8192KB of L3 cache. Looking up the processor using native tools, I find the same result.
+
+With 32KB of L1 cache, we should expect that all buffers less than 32KB to be roughly the same average time. Looking at the graph, we see a mostly flat region, and the 64KB buffer takes significantly longer (4.6ns) than the smaller sizes, which range from slightly less than 1ns to 3.2 ns, although the reason for the positive slope in that region is unclear to me.
+
+Using 524KB of data, both the L1 and L2 caches should be full. Since only 32KB of data fit in the L1 cache and 256KB of data in the L2 cache, we expect the hit rates to be 32/524 and 256/524 respectively.
