@@ -7,7 +7,8 @@
 #include <iterator>
 
 
-int timeloop(int buffer_length, int iters) {
+int timeloop(int buffer_size, int iters) {
+    int buffer_length = buffer_size / sizeof(int);
     std::vector<int> data(buffer_length, 0); //allocates buffer_length bytes of data
     // fill data with all 0s
     srand(time(NULL));
@@ -18,6 +19,11 @@ int timeloop(int buffer_length, int iters) {
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(data.begin(), data.end(), g);
+
+    for(int i = 0; i < buffer_length; i++) {
+        __builtin_prefetch (&data[i],0,3);
+    }
+
     //shuffle data - each element is now the address of a new data element
     std::chrono::time_point<std::chrono::high_resolution_clock> t1;
     std::chrono::time_point<std::chrono::high_resolution_clock> t2;
@@ -34,15 +40,19 @@ int timeloop(int buffer_length, int iters) {
             fastest_run = std::chrono::duration_cast<std::chrono::microseconds>(t2-t1);
         }
     }
-    std::cout <<buffer_length/1000 << "\t"<< 1000.0*(fastest_run.count()/static_cast<double>(buffer_length)) << std::endl;
+    double buffer_size_printable = buffer_size / 1000;
+    if(buffer_length == 0) {
+        buffer_size_printable = buffer_size/1000.0;
+    }
+    std::cout <<buffer_size_printable << "\t"<< 1000.0*(fastest_run.count()/static_cast<double>(buffer_length)) << std::endl;
     // std::cout <<buffer_length << "\t"<< 1000.0*(fastest_run.count()/static_cast<double>(buffer_length)) << "ns" << std::endl;
     return d0;
 
 }
 int main(int argc, char *argv[]) {
     assert(argc == 3);
-    int buffer_length = atoi(argv[1]); //buffer size in bytes
+    int buffer_size = atoi(argv[1]); //buffer size in bytes
     int iters = atoi(argv[2]);
-    timeloop(buffer_length, iters);
+    timeloop(buffer_size, iters);
     return 0;
 }

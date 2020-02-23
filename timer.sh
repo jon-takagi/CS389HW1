@@ -1,5 +1,5 @@
 #!/bin/bash
-for i in $(seq 10 26)
+for i in $(seq 12 26)
 do
     vector_length=$((2**($i)))
     ./bin.out $vector_length 10
