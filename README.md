@@ -31,10 +31,10 @@ Because each buffer size is a power of 2 larger, I used a logscale on the x axis
 ### Part 3: Analysis
 If the buffer size is below the size of the L1 cache, we expect the entire buffer to be prefetched into the cache (thanks to the g++ builtin prefetch), giving a hit rate of 100%. If the buffer is twice the size of the L1 cache, we expect the L1 hit rate to be 50%.
 
-Using the examples given during lecture, we would expect the average time for an L1 hit rate of 50% and L2 hit rate of 100% to be
-$(0.5)(1) + (1-0.5)(3)$ or 2ns.
+Using the examples given during lecture, we would expect the average time for an L1 hit rate of 25% and L2 hit rate of 100% to be
+(0.25)(1) + (1-0.25)(4)$ or 3.25ns. This is fairly close to the reading we got for a 131KB buffer. To get an L1 hit rate of 25% on a 131KB buffer, we would expect to have a 32.75KB buffer - which means that 32KB is likely.
 
-However, by querying the machine directly, we find that [`cat /sys/devices/system/cpu/cpu0/cache/index1/size`](https://stackoverflow.com/questions/20330509/different-cpu-cache-size-reported-by-sys-device-and-dmidecode) tells us that my VM has 32KB of L1 cache, 256KB of L2 cache and 8192KB of L3 cache. Looking up the processor using native tools, I find the same result.
+However, by querying the machine directly, we find that [`cat /sys/devices/system/cpu/cpu0/cache/index1/size`](https://stackoverflow.com/questions/20330509/different-cpu-cache-size-reported-by-sys-device-and-dmidecode) tells us that my VM has 32KB of L1 cache, 256KB of L2 cache and 8192KB of L3 cache. Looking up the processor online, I find the same result. Since the machine has 4 cores, and the L1 and L2 caches are not shared per core, this is in line with the values given in lecture.
 
 With 32KB of L1 cache, we should expect that all buffers less than 32KB to be roughly the same average time. Looking at the graph, we see a mostly flat region, and the 65KB buffer takes longer (2.6ns) than the smaller sizes, which range from slightly less than 1ns to 1.58 ns, although the reason for the positive slope in that region is unclear to me.
 
@@ -43,4 +43,4 @@ Using 524KB of data, both the L1 and L2 caches should be full. Since only 32KB o
 #### Expected vs measured
 Qualitatively, the graphs have roughly the same shape - as the L2 hit rate drops, the average time increases, with a drastic increase once the L3 cache is filled. The spike in average runtime from a 4MB to an 8MB buffer exists because the 4MB buffer is, like the other small buffers, much faster than the listed values predict. For large (64MB) buffers, we measured values worse than expected, possibly due to the way the VM handles cache access vs DRAM access. Nonetheless, the similarity in the shape in the graphs indicates that the experiment is methodologically sound.
 
-Consulting [more recent sources](https://stackoverflow.com/questions/4087280/approximate-cost-to-access-various-caches-and-main-memory) gives different values for the relative times to read from each cache. I plotted these values as `source2` on the second graph, and they match much more closely. I increased the readtime for DRAM to 150ns and created a second expectation, plotted as `expected2`. This matches my measured values almost exactly, indicating that the use of a VM just more than doubles my DRAM read times. 
+Consulting [more recent sources](https://stackoverflow.com/questions/4087280/approximate-cost-to-access-various-caches-and-main-memory) gives different values for the relative times to read from each cache. I plotted these values as `source2` on the second graph, and they match much more closely, but again, the values for very large buffers were off. I increased the readtime for DRAM to 150ns and created a second expectation, plotted as `expected2`. This matches my measured values almost exactly, indicating that the use of a VM just more than doubles my DRAM read times.
