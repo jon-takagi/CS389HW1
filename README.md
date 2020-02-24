@@ -18,13 +18,13 @@ This file was compiled using `gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1)`
 To build this file, I used `g++ -O3 -o bin.out main.cpp`
 
 ### Part 2: graph
-![Avg Runtime vs Buffer size](../blob/master/graph.png)
+![Avg Runtime vs Buffer size](../master/graph.png)
 
 This graph was generated with the command `gnuplot make.plot`, which uses the data in `results.dat` as input. My C++ code outputs the buffer size in KB (using integer division for legibility) and the fastest average time to read per byte in nanoseconds as a tab separated value. Piping the output (or copying it from the terminal) into a text file creates input that gnuplot can understand.
 
 Using the linked values, I calculated the expected average time as described in Part 3, these results are shows as `expected.dat`. Both values are plotted below.
 
-![Expected, Measured Avg Runtimes](../blob/master/graph2.png)
+![Expected, Measured Avg Runtimes](../master/graph2.png)
 
 Because each buffer size is a power of 2 larger, I used a logscale on the x axis so that each data point is evenly spaced. Using a large (1980x1080) image makes the graph more readable.
 
