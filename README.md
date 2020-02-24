@@ -22,7 +22,7 @@ To build this file, I used `g++ -O3 -o bin.out main.cpp`
 
 This graph was generated with the command `gnuplot make.plot`, which uses the data in `results.dat` as input. My C++ code outputs the buffer size in KB (using integer division for legibility) and the fastest average time to read per byte in nanoseconds as a tab separated value. Piping the output (or copying it from the terminal) into a text file creates input that gnuplot can understand.
 
-Using the linked values, I calculated the expected average time as described in Part 3, these results are shows as `expected.dat`. Both values are plotted below.
+Using the linked values, I calculated the expected average time as described in Part 3, these results are shown as `expected.dat`. Both values are plotted below.
 
 ![Expected, Measured Avg Runtimes](../master/graph2.png)
 
@@ -39,3 +39,8 @@ However, by querying the machine directly, we find that [`cat /sys/devices/syste
 With 32KB of L1 cache, we should expect that all buffers less than 32KB to be roughly the same average time. Looking at the graph, we see a mostly flat region, and the 65KB buffer takes longer (2.6ns) than the smaller sizes, which range from slightly less than 1ns to 1.58 ns, although the reason for the positive slope in that region is unclear to me.
 
 Using 524KB of data, both the L1 and L2 caches should be full. Since only 32KB of data fit in the L1 cache and 256KB of data in the L2 cache, we expect the hit rates to be 32/524(6%) and 256/524(48%) respectively.
+
+#### Expected vs measured
+Qualitatively, the graphs have roughly the same shape - as the L2 hit rate drops, the average time increases, with a drastic increase once the L3 cache is filled. The spike in average runtime from a 4MB to an 8MB buffer exists because the 4MB buffer is, like the other small buffers, much faster than the listed values predict. For large (64MB) buffers, we measured values worse than expected, possibly due to the way the VM handles cache access vs DRAM access. Nonetheless, the similarity in the shape in the graphs indicates that the experiment is methodologically sound.
+
+Consulting [more recent sources](https://stackoverflow.com/questions/4087280/approximate-cost-to-access-various-caches-and-main-memory) gives different values for the relative times to read from each cache. I plotted these values as `source2` on the second graph, and they match much more closely. I increased the readtime for DRAM to 150ns and created a second expectation, plotted as `expected2`. This matches my measured values almost exactly, indicating that the use of a VM just more than doubles my DRAM read times. 
